@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from Dataset import parse_labelfile
 import numpy as np
 import cv2
+import time
 
 flags.DEFINE_string("image_path", "./seeds_data/JPEGImages/004.jpg", "input image path")
 flags.DEFINE_string("mask_path", None, "path save the predicted mask (recomended file extension: png)")
@@ -47,19 +48,24 @@ def main(_argv):
     LABELS_PATH = FLAGS.labels
 
     labels = parse_labelfile(LABELS_PATH)
-
+    
+    model = get_model(output_channels=classes, size=224)
+    model.load_weights(weights_path)
+    
+    start_time = time.time()
+    
     img = plt.imread(img_path)/255
     X = tf.convert_to_tensor(img)
     X = tf.image.resize(X, (img_size, img_size))
     X = tf.expand_dims(X, 0)
-
-    model = get_model(output_channels=classes, size=224)
-    model.load_weights(weights_path)
-
     Y = model.predict(X)
+    
     Y = tf.argmax(Y, axis=-1)
     Y = categorical2mask(Y[0], labels)
     Y = cv2.resize(Y, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST)
+    
+    print("--- %s seconds ---" % (time.time() - start_time))
+    
     if show_results:
         display([img, Y])
 

@@ -4,6 +4,7 @@ from absl.flags import FLAGS
 import Dataset 
 import tensorflow as tf 
 from model import get_model
+import datetime
 
 import matplotlib.pyplot as plt
 
@@ -64,6 +65,9 @@ def main(_argv):
     model.compile(optimizer='adam', 
                   metrics=['accuracy'],
                   loss = tf.keras.losses.SparseCategoricalCrossentropy())
+    
+    log_dir = "logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
     ## Training Model
     model_history = model.fit(
@@ -71,9 +75,9 @@ def main(_argv):
                         epochs=FLAGS.epochs,
                         validation_data=val_Dataset,
                         batch_size=FLAGS.batch_size,
-                        callbacks=[cp_callback]
+                        callbacks=[cp_callback, tensorboard_callback]
                         )
-
+    tensorboard_callback
 
 if __name__=="__main__":
     app.run(main)
